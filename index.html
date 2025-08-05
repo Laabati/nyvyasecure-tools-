@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Outil Audit & Hardening | NYVYA Secure Tools</title>
+  <style>
+    body { font-family:sans-serif; max-width:600px; margin:auto; padding:1em; }
+    nav { display:flex; gap:.5em; margin-bottom:1em }
+    nav button { flex:1; padding:.5em }
+    section { display:none }
+    section.active { display:block }
+    input, textarea, button { width:100%; margin:.5em 0; padding:.5em; font-size:1em }
+    pre { background:#f4f4f4; padding:1em; white-space:pre-wrap }
+  </style>
+</head>
+<body>
+
+  <h1>Outil Audit & Hardening</h1>
+
+  <nav>
+    <button data-tab="audit">1 – Audit</button>
+    <button data-tab="blocage">2 – Blocage</button>
+    <button data-tab="verrous">3 – Verrous</button>
+  </nav>
+
+  <!-- 1. Audit -->
+  <section id="audit" class="active">
+    <h2>1 – Analyse de fuite</h2>
+    <input id="domain" placeholder="exemple.com">
+    <button id="runAudit">Lancer l’analyse</button>
+    <pre id="resAudit">Résultats ici…</pre>
+  </section>
+
+  <!-- 2. Blocage -->
+  <section id="blocage">
+    <h2>2 – Blocage de la fuite</h2>
+    <p>Remplace les valeurs exemple puis exécute ces commandes sur ton serveur via SSH :</p>
+    <textarea rows="8">
+// Invalider toutes les sessions actives
+ssh user@serveur.exemple.com << 'EOF'
+rm -rf /var/lib/php/sessions/*
+sed -i 's/session.cookie_secure = .*/session.cookie_secure = 1/' /etc/php.ini
+sed -i 's/session.cookie_httponly = .*/session.cookie_httponly = 1/' /etc/php.ini
+EOF
+    </textarea>
+  </section>
+
+  <!-- 3. Verrous -->
+  <section id="verrous">
+    <h2>3 – Mise en place des verrous</h2>
+    <p>Remplace les chemins et directives exemple puis applique :</p>
+    <textarea rows="8">
+// Ajouter headers de sécurité dans Nginx
+ssh user@serveur.exemple.com << 'EOF'
+cat >> /etc/nginx/conf.d/secure.conf << 'NGINX'
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-Frame-Options "DENY" always;
+NGINX
+nginx -s reload
+EOF
+    </textarea>
+  </section>
+
+  <script>
+    // Onglets
+    document.querySelectorAll('nav button').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        document.querySelectorAll('section').forEach(sec=>sec.classList.remove('active'));
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Module Audit
+    document.getElementById('runAudit').addEventListener('click', async()=>{
+      const d = document.getElementById('domain').value.trim();
+      if(!d) return alert('Merci de saisir un domaine.');
+      document.getElementById('resAudit').textContent = '⏳ Analyse…';
+      try {
+        const res = await fetch(`https://securityheaders.com/?q=${d}&followRedirects=on&format=json`);
+        if(!res.ok) throw new Error(res.statusText);
+        const j = await res.json();
+        const sc = j.headers['set-cookie'] || '— absent —';
+        const score = j.results.score || '— N/A —';
+        document.getElementById('resAudit').textContent =
+`🔍 Domaine : ${d}
+
+🍪 set-cookie :
+${sc}
+
+⭐ Score global : ${score}`;
+      } catch(e) {
+        document.getElementById('resAudit').textContent = '❌ Erreur : ' + e.message;
+      }
+    });
+  </script>
+
+</body>
+</html>

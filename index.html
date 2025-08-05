@@ -63,43 +63,39 @@ EOF
     </textarea>
   </section>
 
-  <script>
-    // Gestion des onglets
-    document.querySelectorAll('nav button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
-        document.getElementById(btn.dataset.tab).classList.add('active');
-      });
+<script>
+  // Gestion des onglets
+  document.querySelectorAll('nav button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(btn.dataset.tab).classList.add('active');
     });
+  });
 
-    // Module Audit
-    document.getElementById('runAudit').addEventListener('click', async () => {
-      const d = document.getElementById('domain').value.trim();
-      if (!d) return alert('Merci de saisir un domaine.');
-      document.getElementById('resAudit').textContent = '⏳ Analyse…';
+  // Module Audit
+  document.getElementById('runAudit').addEventListener('click', async () => {
+    const domain = document.getElementById('domain').value.trim();
+    if (!domain) return alert('Merci de saisir un domaine.');
+    const out = document.getElementById('resAudit');
+    out.textContent = '⏳ Analyse en cours…';
 
-      try {
-        // Proxy AllOrigins pour contourner CORS
-        const proxyUrl = 'https://rapid-lab-ca91.nyvya-contact.workers.dev/?target=';
-const res = await fetch(proxyUrl + encodeURIComponent(d));
-        if (!res.ok) throw new Error(res.statusText);
+    try {
+      const proxyUrl = 'https://rapid-lab-ca91.nyvya-contact.workers.dev/?target=';
+      const res = await fetch(proxyUrl + encodeURIComponent(domain));
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
 
-        const j = await res.json();
-        const sc = j.headers['set-cookie'] || '— absent —';
-        const score = j.results.score || '— N/A —';
+      const json = await res.json();
+      out.textContent =
+`🔍 Domaine : ${json.target}
 
-        document.getElementById('resAudit').textContent =
-`🔍 Domaine : ${d}
-
-🍪 set-cookie :
-${sc}
-
-⭐ Score global : ${score}`;
-      } catch (e) {
-        document.getElementById('resAudit').textContent = '❌ Erreur : ' + e.message;
-      }
-    });
-  </script>
-
+⭐ HTTP status : ${json.status}
+🍪 Set-Cookie : ${json['set-cookie']}
+🔒 HSTS : ${json['strict-transport-security']}`;
+    } catch (e) {
+      out.textContent = '❌ Erreur : ' + e.message;
+      console.error(e);
+    }
+  });
+</script>
 </body>
 </html>

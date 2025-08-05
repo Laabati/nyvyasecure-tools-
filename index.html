@@ -79,7 +79,12 @@ EOF
       document.getElementById('resAudit').textContent = '⏳ Analyse…';
       try {
         const proxy = 'https://api.allorigins.win/raw?url=';
-const res = await fetch(proxy + encodeURIComponent(`https://securityheaders.com/?q=${d}&followRedirects=on&format=json`));
+const res = await fetch(
+  'https://corsproxy.io/?' +
+  encodeURIComponent(
+    `https://securityheaders.com/?q=${d}&followRedirects=on&format=json`
+  )
+);
         if(!res.ok) throw new Error(res.statusText);
         const j = await res.json();
         const sc = j.headers['set-cookie'] || '— absent —';

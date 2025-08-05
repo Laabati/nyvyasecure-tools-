@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Outil Audit & Hardening | NYVYA Secure Tools</title>
   <style>
-    body { font-family:sans-serif; max-width:600px; margin:auto; padding:1em; }
+    body { font-family:sans-serif; max-width:600px; margin:auto; padding:1em }
     nav { display:flex; gap:.5em; margin-bottom:1em }
     nav button { flex:1; padding:.5em }
     section { display:none }
@@ -64,31 +64,31 @@ EOF
   </section>
 
   <script>
-    // Onglets
-    document.querySelectorAll('nav button').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        document.querySelectorAll('section').forEach(sec=>sec.classList.remove('active'));
+    // Gestion des onglets
+    document.querySelectorAll('nav button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
         document.getElementById(btn.dataset.tab).classList.add('active');
       });
     });
 
     // Module Audit
-    document.getElementById('runAudit').addEventListener('click', async()=>{
+    document.getElementById('runAudit').addEventListener('click', async () => {
       const d = document.getElementById('domain').value.trim();
-      if(!d) return alert('Merci de saisir un domaine.');
+      if (!d) return alert('Merci de saisir un domaine.');
       document.getElementById('resAudit').textContent = '⏳ Analyse…';
+
       try {
+        // Proxy AllOrigins pour contourner CORS
         const proxy = 'https://api.allorigins.win/raw?url=';
-const res = await fetch(
-  'https://corsproxy.io/?' +
-  encodeURIComponent(
-    `https://securityheaders.com/?q=${d}&followRedirects=on&format=json`
-  )
-);
-        if(!res.ok) throw new Error(res.statusText);
+        const target = `https://securityheaders.com/?q=${d}&followRedirects=on&format=json`;
+        const res = await fetch(proxy + encodeURIComponent(target));
+        if (!res.ok) throw new Error(res.statusText);
+
         const j = await res.json();
         const sc = j.headers['set-cookie'] || '— absent —';
         const score = j.results.score || '— N/A —';
+
         document.getElementById('resAudit').textContent =
 `🔍 Domaine : ${d}
 
@@ -96,7 +96,7 @@ const res = await fetch(
 ${sc}
 
 ⭐ Score global : ${score}`;
-      } catch(e) {
+      } catch (e) {
         document.getElementById('resAudit').textContent = '❌ Erreur : ' + e.message;
       }
     });

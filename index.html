@@ -78,7 +78,8 @@ EOF
       if(!d) return alert('Merci de saisir un domaine.');
       document.getElementById('resAudit').textContent = '⏳ Analyse…';
       try {
-        const res = await fetch(`https://securityheaders.com/?q=${d}&followRedirects=on&format=json`);
+        const proxy = 'https://api.allorigins.win/raw?url=';
+const res = await fetch(proxy + encodeURIComponent(`https://securityheaders.com/?q=${d}&followRedirects=on&format=json`));
         if(!res.ok) throw new Error(res.statusText);
         const j = await res.json();
         const sc = j.headers['set-cookie'] || '— absent —';

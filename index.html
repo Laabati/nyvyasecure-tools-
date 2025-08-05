@@ -80,9 +80,8 @@ EOF
 
       try {
         // Proxy AllOrigins pour contourner CORS
-        const proxy = 'https://api.allorigins.win/raw?url=';
-        const target = `https://securityheaders.com/?q=${d}&followRedirects=on&format=json`;
-        const res = await fetch(proxy + encodeURIComponent(target));
+        const proxyUrl = 'https://rapid-lab-ca91.nyvya-contact.workers.dev/?target=';
+const res = await fetch(proxyUrl + encodeURIComponent(d));
         if (!res.ok) throw new Error(res.statusText);
 
         const j = await res.json();
